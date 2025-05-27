@@ -28,7 +28,7 @@ from ...utils import CONFIG_NAME, logging
 
 logger = logging.get_logger(__name__)
 
-
+# todo model type -> config
 CONFIG_MAPPING_NAMES = OrderedDict(
     [
         # Add configs here
@@ -68,6 +68,7 @@ CONFIG_MAPPING_NAMES = OrderedDict(
         ("clip_vision_model", "CLIPVisionConfig"),
         ("clipseg", "CLIPSegConfig"),
         ("clvp", "ClvpConfig"),
+        # todo
         ("code_llama", "LlamaConfig"),
         ("codegen", "CodeGenConfig"),
         ("cohere", "CohereConfig"),

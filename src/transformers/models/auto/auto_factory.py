@@ -385,11 +385,13 @@ FROM_PRETRAINED_FLAX_DOCSTRING = """
 
 
 def _get_model_class(config, model_mapping):
+    # todo 根据配置获取支持的模型
     supported_models = model_mapping[type(config)]
     if not isinstance(supported_models, (list, tuple)):
         return supported_models
 
     name_to_model = {model.__name__: model for model in supported_models}
+    # todo 获取architectures
     architectures = getattr(config, "architectures", [])
     for arch in architectures:
         if arch in name_to_model:
@@ -448,7 +450,7 @@ class _BaseAutoModelClass:
     def _prepare_config_for_auto_class(cls, config: PretrainedConfig) -> PretrainedConfig:
         """Additional autoclass-specific config post-loading manipulation. May be overridden in subclasses."""
         return config
-
+    # todo 加载模型！！！！！！
     @classmethod
     def from_pretrained(cls, pretrained_model_name_or_path, *model_args, **kwargs):
         config = kwargs.pop("config", None)
@@ -543,8 +545,43 @@ class _BaseAutoModelClass:
                 kwargs["torch_dtype"] = "auto"
             if kwargs_orig.get("quantization_config", None) is not None:
                 kwargs["quantization_config"] = kwargs_orig["quantization_config"]
-
+        # todo 有auto_map属性时
+        """"
+             {
+  "architectures": [
+    "JiutianForCausalLM"
+  ],
+  "auto_map": {
+    "AutoConfig": "configuration_jiutian.JiutianConfig",
+    "AutoModelForCausalLM": "modeling_jiutian.JiutianForCausalLM"
+  },
+  "qkv_bias": true,
+  "attention_dropout": 0.0,
+  "bos_token_id": null,
+  "eos_token_id": [159251, 159255],
+  "hidden_act": "silu",
+  "hidden_size": 8192,
+  "initializer_range": 0.008944,
+  "intermediate_size": 29184,
+  "max_position_embeddings": 8192,
+  "model_type": "jiutian",
+  "num_attention_heads": 64,
+  "num_hidden_layers": 3,
+  "num_key_value_heads": 8,
+  "pretraining_tp": 1,
+  "rms_norm_eps": 1e-06,
+  "rope_scaling": null,
+  "rope_theta": 500000,
+  "tie_word_embeddings": false,
+  "torch_dtype": "bfloat16",
+  "transformers_version": "4.37.1",
+  "use_cache": true,
+  "vocab_size": 159744
+}
+        """
+        # todo 代码不在transformers中
         has_remote_code = hasattr(config, "auto_map") and cls.__name__ in config.auto_map
+        # todo 代码在transformers中
         has_local_code = type(config) in cls._model_mapping.keys()
         trust_remote_code = resolve_trust_remote_code(
             trust_remote_code, pretrained_model_name_or_path, has_local_code, has_remote_code
@@ -552,9 +589,11 @@ class _BaseAutoModelClass:
 
         # Set the adapter kwargs
         kwargs["adapter_kwargs"] = adapter_kwargs
-
+        # todo 本地不包含
         if has_remote_code and trust_remote_code:
+            # todo 获取自定义类
             class_ref = config.auto_map[cls.__name__]
+            # todo 模型类：如"AutoModelForCausalLM": "modeling_jiutian.JiutianForCausalLM"中的JiutianForCausalLM
             model_class = get_class_from_dynamic_module(
                 class_ref, pretrained_model_name_or_path, code_revision=code_revision, **hub_kwargs, **kwargs
             )
@@ -564,10 +603,13 @@ class _BaseAutoModelClass:
             return model_class.from_pretrained(
                 pretrained_model_name_or_path, *model_args, config=config, **hub_kwargs, **kwargs
             )
+        # todo 本地包含
         elif type(config) in cls._model_mapping.keys():
+            # todo 获取模型类【全类名】
             model_class = _get_model_class(config, cls._model_mapping)
             if model_class.config_class == config.sub_configs.get("text_config", None):
                 config = config.get_text_config()
+            # todo 加载模型！！！！！！
             return model_class.from_pretrained(
                 pretrained_model_name_or_path, *model_args, config=config, **hub_kwargs, **kwargs
             )
@@ -751,6 +793,7 @@ class _LazyAutoMapping(OrderedDict):
 
     def __init__(self, config_mapping, model_mapping):
         self._config_mapping = config_mapping
+        # todo model -> config ===> config -> model
         self._reverse_config_mapping = {v: k for k, v in config_mapping.items()}
         self._model_mapping = model_mapping
         self._model_mapping._model_mapping = self
@@ -764,8 +807,10 @@ class _LazyAutoMapping(OrderedDict):
     def __getitem__(self, key):
         if key in self._extra_content:
             return self._extra_content[key]
+        # todo 1、通过配置找模型名
         model_type = self._reverse_config_mapping[key.__name__]
         if model_type in self._model_mapping:
+            # todo 2、通过模型名获取模型类
             model_name = self._model_mapping[model_type]
             return self._load_attr_from_module(model_type, model_name)
 
@@ -778,13 +823,15 @@ class _LazyAutoMapping(OrderedDict):
         raise KeyError(key)
 
     def _load_attr_from_module(self, model_type, attr):
+        # todo
         module_name = model_type_to_module_name(model_type)
         if module_name not in self._modules:
             self._modules[module_name] = importlib.import_module(f".{module_name}", "transformers.models")
         return getattribute_from_module(self._modules[module_name], attr)
-
+    # todo 获取所有keys
     def keys(self):
         mapping_keys = [
+            # todo
             self._load_attr_from_module(key, name)
             for key, name in self._config_mapping.items()
             if key in self._model_mapping.keys()

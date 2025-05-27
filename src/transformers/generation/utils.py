@@ -2108,7 +2108,7 @@ class GenerationMixin:
         generation_config._eos_token_tensor = eos_token_tensor
         generation_config._pad_token_tensor = pad_token_tensor
         generation_config._decoder_start_token_tensor = decoder_start_token_tensor
-
+    # todo 生成输出的方法！！！！！！
     @torch.no_grad()
     def generate(
         self,

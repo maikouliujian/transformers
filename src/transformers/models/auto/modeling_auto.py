@@ -495,7 +495,7 @@ MODEL_WITH_LM_HEAD_MAPPING_NAMES = OrderedDict(
         ("yoso", "YosoForMaskedLM"),
     ]
 )
-
+# todo 模型->模型类
 MODEL_FOR_CAUSAL_LM_MAPPING_NAMES = OrderedDict(
     [
         # Model for Causal LM mapping
@@ -1544,6 +1544,7 @@ MODEL_FOR_IMAGE_TO_IMAGE_MAPPING_NAMES = OrderedDict(
 MODEL_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_MAPPING_NAMES)
 MODEL_FOR_PRETRAINING_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_FOR_PRETRAINING_MAPPING_NAMES)
 MODEL_WITH_LM_HEAD_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_WITH_LM_HEAD_MAPPING_NAMES)
+# todo model type -> config, model type -> model class
 MODEL_FOR_CAUSAL_LM_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_FOR_CAUSAL_LM_MAPPING_NAMES)
 MODEL_FOR_CAUSAL_IMAGE_MODELING_MAPPING = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, MODEL_FOR_CAUSAL_IMAGE_MODELING_MAPPING_NAMES
@@ -1683,8 +1684,9 @@ class _AutoModelWithLMHead(_BaseAutoModelClass):
 
 _AutoModelWithLMHead = auto_class_update(_AutoModelWithLMHead, head_doc="language modeling")
 
-
+# todo 因果模型
 class AutoModelForCausalLM(_BaseAutoModelClass):
+    # todo 配置->模型
     _model_mapping = MODEL_FOR_CAUSAL_LM_MAPPING
 
 
