@@ -401,7 +401,6 @@ class LlamaTokenizer(PreTrainedTokenizer):
         """
         bos_token_id = [self.bos_token_id] if self.add_bos_token else []
         eos_token_id = [self.eos_token_id] if self.add_eos_token else []
-
         output = [0] * len(bos_token_id + token_ids_0 + eos_token_id)
 
         if token_ids_1 is not None:

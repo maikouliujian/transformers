@@ -731,7 +731,7 @@ class Qwen2Model(Qwen2PreTrainedModel):
 
 class KwargsForCausalLM(FlashAttentionKwargs, LossKwargs): ...
 
-
+# todo
 class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
     _tied_weights_keys = ["lm_head.weight"]
     _tp_plan = {"lm_head": "colwise_rep"}
@@ -866,6 +866,7 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
     """,
     QWEN2_START_DOCSTRING,
 )
+# todo 入口
 class Qwen2ForSequenceClassification(Qwen2PreTrainedModel):
     def __init__(self, config):
         super().__init__(config)

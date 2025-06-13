@@ -405,7 +405,7 @@ def _get_model_class(config, model_mapping):
     # defaults.
     return supported_models[0]
 
-
+# todo auto 模型基类
 class _BaseAutoModelClass:
     # Base class for auto models.
     _model_mapping = None
@@ -451,6 +451,7 @@ class _BaseAutoModelClass:
         """Additional autoclass-specific config post-loading manipulation. May be overridden in subclasses."""
         return config
     # todo 加载模型！！！！！！
+    # todo 如：self.model = AutoModelForSequenceClassification.from_pretrained(model_name_or_path, cache_dir=cache_dir)
     @classmethod
     def from_pretrained(cls, pretrained_model_name_or_path, *model_args, **kwargs):
         config = kwargs.pop("config", None)
@@ -529,7 +530,7 @@ class _BaseAutoModelClass:
             # to not overwrite the quantization_config if config has a quantization_config
             if kwargs.get("quantization_config", None) is not None:
                 _ = kwargs.pop("quantization_config")
-
+            # todo 加载模型配置
             config, kwargs = AutoConfig.from_pretrained(
                 pretrained_model_name_or_path,
                 return_unused_kwargs=True,
@@ -579,10 +580,12 @@ class _BaseAutoModelClass:
   "vocab_size": 159744
 }
         """
-        # todo 代码不在transformers中
+        # todo 代码不在transformers中，由用户自定义【1、配置文件中有auto_map
+        #                            2、代码调用处AutoModelForCausalLM.from_pretrained(model_path)中的AutoModelForCausalLM也必须在auto_map中】
         has_remote_code = hasattr(config, "auto_map") and cls.__name__ in config.auto_map
         # todo 代码在transformers中
         has_local_code = type(config) in cls._model_mapping.keys()
+        # todo 是否信任用户自定义代码
         trust_remote_code = resolve_trust_remote_code(
             trust_remote_code, pretrained_model_name_or_path, has_local_code, has_remote_code
         )
@@ -593,11 +596,12 @@ class _BaseAutoModelClass:
         if has_remote_code and trust_remote_code:
             # todo 获取自定义类
             class_ref = config.auto_map[cls.__name__]
-            # todo 模型类：如"AutoModelForCausalLM": "modeling_jiutian.JiutianForCausalLM"中的JiutianForCausalLM
+            # todo 模型类model_class为：如"AutoModelForCausalLM": "modeling_jiutian.JiutianForCausalLM"中的JiutianForCausalLM
             model_class = get_class_from_dynamic_module(
                 class_ref, pretrained_model_name_or_path, code_revision=code_revision, **hub_kwargs, **kwargs
             )
             _ = hub_kwargs.pop("code_revision", None)
+            # todo 注册新的model类
             cls.register(config.__class__, model_class, exist_ok=True)
             model_class = add_generation_mixin_to_remote_model(model_class)
             return model_class.from_pretrained(
@@ -629,6 +633,7 @@ class _BaseAutoModelClass:
             model_class ([`PreTrainedModel`]):
                 The model to register.
         """
+        # todo 在model_class类中有一个config_class属性，如果没有，那么就在其父类中
         if hasattr(model_class, "config_class") and model_class.config_class.__name__ != config_class.__name__:
             raise ValueError(
                 "The model class you are passing has a `config_class` attribute that is not consistent with the "

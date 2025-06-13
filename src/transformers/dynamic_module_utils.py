@@ -692,7 +692,7 @@ def resolve_trust_remote_code(trust_remote_code, model_name, has_local_code, has
         elif has_remote_code:
             # For the CI which puts the timeout at 0
             _raise_timeout_error(None, None)
-
+    # todo
     if has_remote_code and not has_local_code and not trust_remote_code:
         raise ValueError(
             f"Loading {model_name} requires you to execute the configuration file in that"

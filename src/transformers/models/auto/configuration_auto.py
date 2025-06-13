@@ -1010,7 +1010,7 @@ class AutoConfig:
         raise ValueError(
             f"Unrecognized model identifier: {model_type}. Should contain one of {', '.join(CONFIG_MAPPING.keys())}"
         )
-
+    # todo 加载配置文件
     @classmethod
     @replace_list_option_in_docstrings()
     def from_pretrained(cls, pretrained_model_name_or_path, **kwargs):
@@ -1113,14 +1113,18 @@ class AutoConfig:
         code_revision = kwargs.pop("code_revision", None)
 
         config_dict, unused_kwargs = PretrainedConfig.get_config_dict(pretrained_model_name_or_path, **kwargs)
+        # todo 用户自定义的代码，非transformer框架自带
         has_remote_code = "auto_map" in config_dict and "AutoConfig" in config_dict["auto_map"]
+        # todo transformer框架自带代码
         has_local_code = "model_type" in config_dict and config_dict["model_type"] in CONFIG_MAPPING
+        # todo 信任用户自定义代码
         trust_remote_code = resolve_trust_remote_code(
             trust_remote_code, pretrained_model_name_or_path, has_local_code, has_remote_code
         )
 
         if has_remote_code and trust_remote_code:
             class_ref = config_dict["auto_map"]["AutoConfig"]
+            # todo
             config_class = get_class_from_dynamic_module(
                 class_ref, pretrained_model_name_or_path, code_revision=code_revision, **kwargs
             )

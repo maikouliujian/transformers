@@ -1710,7 +1710,7 @@ AutoModelForSeq2SeqLM = auto_class_update(
     checkpoint_for_example="google-t5/t5-base",
 )
 
-
+# todo 分类模型
 class AutoModelForSequenceClassification(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING
 

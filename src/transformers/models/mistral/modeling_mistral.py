@@ -328,6 +328,7 @@ MISTRAL_START_DOCSTRING = r"""
     MISTRAL_START_DOCSTRING,
 )
 class MistralPreTrainedModel(PreTrainedModel):
+    # todo
     config_class = MistralConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True

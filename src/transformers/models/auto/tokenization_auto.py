@@ -801,7 +801,7 @@ def get_tokenizer_config(
     result["_commit_hash"] = commit_hash
     return result
 
-
+# todo 自动加载配置类：
 class AutoTokenizer:
     r"""
     This is a generic tokenizer class that will be instantiated as one of the tokenizer classes of the library when
@@ -815,7 +815,7 @@ class AutoTokenizer:
             "AutoTokenizer is designed to be instantiated "
             "using the `AutoTokenizer.from_pretrained(pretrained_model_name_or_path)` method."
         )
-
+    # todo # todo 如：self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir=cache_dir)
     @classmethod
     @replace_list_option_in_docstrings(TOKENIZER_MAPPING_NAMES)
     def from_pretrained(cls, pretrained_model_name_or_path, *inputs, **kwargs):

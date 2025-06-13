@@ -367,6 +367,7 @@ Qwen2_5_VL_START_DOCSTRING = r"""
     "The bare Qwen2_5_VL Model outputting raw hidden-states without any specific head on top.",
     Qwen2_5_VL_START_DOCSTRING,
 )
+# todo Qwen2_5_VL
 class Qwen2_5_VLPreTrainedModel(PreTrainedModel):
     config_class = Qwen2_5_VLConfig
     base_model_prefix = "model"
