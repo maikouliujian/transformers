@@ -1123,8 +1123,9 @@ class AutoConfig:
         )
 
         if has_remote_code and trust_remote_code:
+            # todo 获取模型的配置类
             class_ref = config_dict["auto_map"]["AutoConfig"]
-            # todo
+            # todo 解析类
             config_class = get_class_from_dynamic_module(
                 class_ref, pretrained_model_name_or_path, code_revision=code_revision, **kwargs
             )

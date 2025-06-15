@@ -124,6 +124,7 @@ def get_relative_import_files(module_file: Union[str, os.PathLike]) -> list[str]
     while not no_change:
         new_imports = []
         for f in files_to_check:
+            # todo
             new_imports.extend(get_relative_imports(f))
 
         module_path = Path(module_file).parent
@@ -243,6 +244,7 @@ def get_class_in_module(
     if name.endswith(".py"):
         name = name[:-3]
     name = name.replace(os.path.sep, ".")
+    # todo hf缓存目录
     module_file: Path = Path(HF_MODULES_CACHE) / module_path
     with _HF_REMOTE_CODE_LOCK:
         if force_reload:
@@ -252,6 +254,7 @@ def get_class_in_module(
         module_spec = importlib.util.spec_from_file_location(name, location=module_file)
 
         # Hash the module file and all its relative imports to check if we need to reload it
+        # todo
         module_files: list[Path] = [module_file] + sorted(map(Path, get_relative_import_files(module_file)))
         module_hash: str = hashlib.sha256(b"".join(bytes(f) + f.read_bytes() for f in module_files)).hexdigest()
 
@@ -347,11 +350,16 @@ def get_cached_module_file(
 
     # Download and cache module_file from the repo `pretrained_model_name_or_path` of grab it if it's a local file.
     pretrained_model_name_or_path = str(pretrained_model_name_or_path)
+    # todo 是否本地存在模型目录
     is_local = os.path.isdir(pretrained_model_name_or_path)
     if is_local:
+        #todo 本地模型路径，如：jina-embeddings-v3
         submodule = os.path.basename(pretrained_model_name_or_path)
     else:
         submodule = pretrained_model_name_or_path.replace("/", os.path.sep)
+        # todo 非本地的，会从远程进行下载，优先从缓存中获取
+        # todo 这里会拿到本地缓存的文件目录：如：/root/.cache/huggingface/hub/models--jinaai--xlm-roberta-flash-implementation/snapshots/2b6bc3f30750b3a9648fe9b63448c09920efe9be/configuration_xlm_roberta.py
+        # todo 进入到huggingface_hub中
         cached_module = try_to_load_from_cache(
             pretrained_model_name_or_path, module_file, cache_dir=cache_dir, revision=_commit_hash, repo_type=repo_type
         )
@@ -359,6 +367,7 @@ def get_cached_module_file(
     new_files = []
     try:
         # Load from URL or cache if already cached
+        # todo 本地缓存读取 或者 从hf上下载并缓存
         resolved_module_file = cached_file(
             pretrained_model_name_or_path,
             module_file,
@@ -372,6 +381,7 @@ def get_cached_module_file(
             repo_type=repo_type,
             _commit_hash=_commit_hash,
         )
+        # todo 如果commit hash发生了改动，说明是新文件，需要重新下载
         if not is_local and cached_module != resolved_module_file:
             new_files.append(module_file)
 
@@ -380,18 +390,23 @@ def get_cached_module_file(
         raise
 
     # Check we have all the requirements in our environment
+    # todo 检查需要导入的包
     modules_needed = check_imports(resolved_module_file)
 
     # Now we move the module inside our cached dynamic modules.
+    # todo 移动至transformers_modules目录下：如/root/.cache/huggingface/modules/transformers_modules/jinaai/xlm-roberta-flash-implementation/2b6bc3f30750b3a9648fe9b63448c09920efe9be/
     full_submodule = TRANSFORMERS_DYNAMIC_MODULE_NAME + os.path.sep + submodule
+    # todo 创建模块缓存目录：/root/.cache/huggingface/modules/transformers_modules/
     create_dynamic_module(full_submodule)
     submodule_path = Path(HF_MODULES_CACHE) / full_submodule
+    ### todo 1、从本地获取文件，不带commit hash
     if submodule == os.path.basename(pretrained_model_name_or_path):
         # We copy local files to avoid putting too many folders in sys.path. This copy is done when the file is new or
         # has changed since last copy.
         if not (submodule_path / module_file).exists() or not filecmp.cmp(
             resolved_module_file, str(submodule_path / module_file)
         ):
+            # todo 移动文件，从hf缓存到hf module缓存
             shutil.copy(resolved_module_file, submodule_path / module_file)
             importlib.invalidate_caches()
         for module_needed in modules_needed:
@@ -403,7 +418,9 @@ def get_cached_module_file(
                 shutil.copy(module_needed_file, submodule_path / module_needed)
                 importlib.invalidate_caches()
     else:
+        ### todo 从远程获取文件，要带commit hash
         # Get the commit hash
+        # todo 获取commit hash
         commit_hash = extract_commit_hash(resolved_module_file, _commit_hash)
 
         # The module file will end up being placed in a subfolder with the git hash of the repo. This way we get the
@@ -413,6 +430,7 @@ def get_cached_module_file(
         create_dynamic_module(full_submodule)
 
         if not (submodule_path / module_file).exists():
+            # todo 移动文件，从hf缓存到hf module缓存
             shutil.copy(resolved_module_file, submodule_path / module_file)
             importlib.invalidate_caches()
         # Make sure we also have every file with relative
@@ -431,7 +449,7 @@ def get_cached_module_file(
                     _commit_hash=commit_hash,
                 )
                 new_files.append(f"{module_needed}.py")
-
+    # todo 去hf上下载文件
     if len(new_files) > 0 and revision is None:
         new_files = "\n".join([f"- {f}" for f in new_files])
         repo_type_str = "" if repo_type is None else f"{repo_type}s/"
@@ -546,19 +564,26 @@ def get_class_from_dynamic_module(
         token = use_auth_token
 
     # Catch the name of the repo if it's specified in `class_reference`
+    # todo 处理 'BAAI/Matroyshka-ReRanker-document--mistral_config.CostWiseMistralConfig' 这种情况
+    # todo 这种情况，会按照BAAI/Matroyshka-ReRanker-document去hf上下载模型
     if "--" in class_reference:
         repo_id, class_reference = class_reference.split("--")
     else:
+        # todo 这种情况repo_id为模型目录
         repo_id = pretrained_model_name_or_path
     # todo 切分为 module_file 和 class_name
+    # todo 如配置文件是："AutoConfig": "configuration_xlm_roberta.XLMRobertaFlashConfig",中的configuration_xlm_roberta和XLMRobertaFlashConfig
+    # todo 如模型文件是："AutoModel": "modeling_lora.XLMRobertaLoRA",中的modeling_lora和XLMRobertaLoRA
     module_file, class_name = class_reference.split(".")
 
     if code_revision is None and pretrained_model_name_or_path == repo_id:
         code_revision = revision
     # And lastly we get the class inside our newly created module
+    # todo 获取缓存配置/模型文件，如：configuration_xlm_roberta/modeling_lora
+    # todo 如：transformers_modules/jinaai/xlm-roberta-flash-implementation/2b6bc3f30750b3a9648fe9b63448c09920efe9be/configuration_xlm_roberta.py
     final_module = get_cached_module_file(
-        repo_id,
-        module_file + ".py",
+        repo_id, # todo 等于model_path, 如：/dhp/jina-embeddings-v3/models/jina-embeddings-v3
+        module_file + ".py", # todo 配置/模型文件
         cache_dir=cache_dir,
         force_download=force_download,
         resume_download=resume_download,
@@ -568,6 +593,7 @@ def get_class_from_dynamic_module(
         local_files_only=local_files_only,
         repo_type=repo_type,
     )
+    # todo
     return get_class_in_module(class_name, final_module, force_reload=force_download)
 
 

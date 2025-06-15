@@ -94,7 +94,7 @@ default_cache_path = constants.default_cache_path
 PYTORCH_PRETRAINED_BERT_CACHE = os.getenv("PYTORCH_PRETRAINED_BERT_CACHE", constants.HF_HUB_CACHE)
 PYTORCH_TRANSFORMERS_CACHE = os.getenv("PYTORCH_TRANSFORMERS_CACHE", PYTORCH_PRETRAINED_BERT_CACHE)
 TRANSFORMERS_CACHE = os.getenv("TRANSFORMERS_CACHE", PYTORCH_TRANSFORMERS_CACHE)
-
+# todo hf缓存目录：/root/.cache/huggingface/
 HF_MODULES_CACHE = os.getenv("HF_MODULES_CACHE", os.path.join(constants.HF_HOME, "modules"))
 TRANSFORMERS_DYNAMIC_MODULE_NAME = "transformers_modules"
 SESSION_ID = uuid4().hex
@@ -263,6 +263,7 @@ def cached_file(
     model_weights_file = cached_file("google-bert/bert-base-uncased", "pytorch_model.bin")
     ```
     """
+    # todo 本地缓存读取 或者 从hf上下载并缓存
     file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
     file = file[0] if file is not None else file
     return file
@@ -369,12 +370,15 @@ def cached_files(
 
     # Add folder to filenames
     full_filenames = [os.path.join(subfolder, file) for file in filenames]
-
+    # todo path_or_repo_id 模型路径：
+    #   1、如果是本地寻找，那么是模型的本地路径
+    #   2、如果是类似BAAI/Matroyshka-ReRanker-passage--mistral_config.CostWiseMistralConfig这种，那么是BAAI/Matroyshka-ReRanker-passage
     path_or_repo_id = str(path_or_repo_id)
     existing_files = []
     for filename in full_filenames:
         if os.path.isdir(path_or_repo_id):
             resolved_file = os.path.join(path_or_repo_id, filename)
+            # todo 文件不存在
             if not os.path.isfile(resolved_file):
                 if _raise_exceptions_for_missing_entries and filename != os.path.join(subfolder, "config.json"):
                     revision_ = "main" if revision is None else revision
@@ -387,9 +391,11 @@ def cached_files(
             existing_files.append(resolved_file)
 
     # All files exist
+    # todo 所有文件都在本地存在
     if len(existing_files) == len(full_filenames):
+        # todo 本地模型文件直接返回
         return existing_files
-
+    # todo 从hf上下载模型文件!!!!!!
     if cache_dir is None:
         cache_dir = TRANSFORMERS_CACHE
     if isinstance(cache_dir, Path):
@@ -419,8 +425,10 @@ def cached_files(
     user_agent = http_user_agent(user_agent)
     # download the files if needed
     try:
+        # todo 从hf上下载模型！！！！！！
         if len(full_filenames) == 1:
             # This is slightly better for only 1 file
+            # todo 下载文件
             hf_hub_download(
                 path_or_repo_id,
                 filenames[0],

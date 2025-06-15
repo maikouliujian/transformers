@@ -470,6 +470,7 @@ class _BaseAutoModelClass:
         ]
         hub_kwargs = {name: kwargs.pop(name) for name in hub_kwargs_names if name in kwargs}
         code_revision = kwargs.pop("code_revision", None)
+        # todo commit hash
         commit_hash = kwargs.pop("_commit_hash", None)
         adapter_kwargs = kwargs.pop("adapter_kwargs", None)
 
@@ -488,7 +489,7 @@ class _BaseAutoModelClass:
 
         if token is not None:
             hub_kwargs["token"] = token
-
+        # todo 获取commit hash
         if commit_hash is None:
             if not isinstance(config, PretrainedConfig):
                 # We make a call to the config file first (which may be absent) to get the commit hash as soon as possible
@@ -530,7 +531,12 @@ class _BaseAutoModelClass:
             # to not overwrite the quantization_config if config has a quantization_config
             if kwargs.get("quantization_config", None) is not None:
                 _ = kwargs.pop("quantization_config")
-            # todo 加载模型配置
+            # todo 加载模型配置,config就是模型的config.json中"AutoConfig": "BAAI/Matroyshka-ReRanker-passage--mistral_config.CostWiseMistralConfig"的加载结果
+            # todo pretrained_model_name_or_path是model = AutoModelForCausalLM.from_pretrained(
+            #     "/Users/lj/mine/klx/modes/Matroyshka-ReRanker-document",
+            #     trust_remote_code=True,
+            #     device_map="auto")
+            # todo 中的/Users/lj/mine/klx/modes/Matroyshka-ReRanker-document
             config, kwargs = AutoConfig.from_pretrained(
                 pretrained_model_name_or_path,
                 return_unused_kwargs=True,
@@ -594,9 +600,11 @@ class _BaseAutoModelClass:
         kwargs["adapter_kwargs"] = adapter_kwargs
         # todo 本地不包含
         if has_remote_code and trust_remote_code:
-            # todo 获取自定义类
+            # todo 获取自定义类,"AutoModelForCausalLM": "mistral_model.CostWiseMistralForCausalLM"中的mistral_model.CostWiseMistralForCausalLM
             class_ref = config.auto_map[cls.__name__]
             # todo 模型类model_class为：如"AutoModelForCausalLM": "modeling_jiutian.JiutianForCausalLM"中的JiutianForCausalLM
+            # todo 有可能从本地缓存中获取
+            # todo 核心方法！！！！！！
             model_class = get_class_from_dynamic_module(
                 class_ref, pretrained_model_name_or_path, code_revision=code_revision, **hub_kwargs, **kwargs
             )
