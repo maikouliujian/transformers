@@ -274,7 +274,7 @@ def get_class_in_module(
 
 def get_cached_module_file(
     pretrained_model_name_or_path: Union[str, os.PathLike],
-    module_file: str,
+    module_file: str, # todo 当前文件名
     cache_dir: Optional[Union[str, os.PathLike]] = None,
     force_download: bool = False,
     resume_download: Optional[bool] = None,
@@ -390,14 +390,28 @@ def get_cached_module_file(
         raise
 
     # Check we have all the requirements in our environment
-    # todo 检查需要导入的包
+    # todo 检查当前文件【模型文件和配置文件】需要导入包的文件【注：只能导入当前文件的依赖，不能导入其父类所依赖的文件】
+    # todo 如果需要的文件不在当前文件的导包中，可以直接加上，
+    # todo 比如：from .stochastic_depth import StochasticDepth
     modules_needed = check_imports(resolved_module_file)
+    """
+    print(resolved_module_file)
+    print(modules_needed)
+    ========>
+    /dhp/jina-embeddings-v3/models/jina-embeddings-v3/configuration_xlm_roberta.py
+     []
+    /dhp/jina-embeddings-v3/models/jina-embeddings-v3/modeling_lora.py
+    ['modeling_xlm_roberta', 'configuration_xlm_roberta']
+
+    """
 
     # Now we move the module inside our cached dynamic modules.
     # todo 移动至transformers_modules目录下：如/root/.cache/huggingface/modules/transformers_modules/jinaai/xlm-roberta-flash-implementation/2b6bc3f30750b3a9648fe9b63448c09920efe9be/
+    # todo submodule: 如果是是本地目录就是model的路径，如果是远程下载，就是config.json中的_name_or_path": "jinaai/jina-embeddings-v3
     full_submodule = TRANSFORMERS_DYNAMIC_MODULE_NAME + os.path.sep + submodule
-    # todo 创建模块缓存目录：/root/.cache/huggingface/modules/transformers_modules/
+    # todo 创建模块缓存目录：/transformers_modules/xxxxxx
     create_dynamic_module(full_submodule)
+    # todo /root/.cache/huggingface/modules/transformers_modules/xxxxxx
     submodule_path = Path(HF_MODULES_CACHE) / full_submodule
     ### todo 1、从本地获取文件，不带commit hash
     if submodule == os.path.basename(pretrained_model_name_or_path):
