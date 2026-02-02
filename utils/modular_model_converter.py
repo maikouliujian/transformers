@@ -32,6 +32,7 @@ from transformers import logging
 from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES
 
 
+
 logger = logging.get_logger(__name__)
 
 
@@ -1695,6 +1696,7 @@ def create_modules(modular_mapper: ModularFileMapper) -> dict[str, cst.Module]:
 
 
 def convert_modular_file(modular_file):
+    breakpoint()
     pattern = re.search(r"modular_(.*)(?=\.py$)", modular_file)
     output = {}
     if pattern is not None:
@@ -1716,6 +1718,7 @@ def convert_modular_file(modular_file):
                 header = AUTO_GENERATED_MESSAGE.format(
                     relative_path=relative_path, short_name=os.path.basename(relative_path)
                 )
+                # todo 转化后的代码：module.code
                 ruffed_code = run_ruff(header + module.code, True)
                 formatted_code = run_ruff(ruffed_code, False)
                 output[file] = [formatted_code, ruffed_code]

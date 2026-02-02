@@ -2135,7 +2135,7 @@ class Trainer:
             self.accelerator.ddp_handler = DistributedDataParallelKwargs(**kwargs)
 
         return model
-
+    # todo 训练入口
     def train(
         self,
         resume_from_checkpoint: Optional[Union[str, bool]] = None,
@@ -2470,7 +2470,7 @@ class Trainer:
 
         if args.eval_on_start:
             self._evaluate(trial, ignore_keys_for_eval, skip_scheduler=True)
-
+        # todo 训练的循环！！！！！！
         for epoch in range(epochs_trained, num_train_epochs):
             epoch_dataloader = train_dataloader
             if hasattr(epoch_dataloader, "set_epoch"):

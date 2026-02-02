@@ -392,6 +392,7 @@ class GenerationConfig(PushToHubMixin):
 
     extra_output_flags = ("output_attentions", "output_hidden_states", "output_scores", "output_logits")
 
+
     def __init__(self, **kwargs):
         # Parameters that control the length of the output
         self.max_length = kwargs.pop("max_length", 20)

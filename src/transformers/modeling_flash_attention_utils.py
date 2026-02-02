@@ -329,11 +329,12 @@ def _flash_attention_forward(
         causal = is_causal and query_length != 1
 
     # Assuming 4D tensors, key_states.shape[1] is the key/value sequence length (source length).
+    # todo 判断是否使用sliding_windows
     use_sliding_windows = (
         _flash_supports_window_size and sliding_window is not None and key_states.shape[1] > sliding_window
     )
     flash_kwargs = {"window_size": (sliding_window, sliding_window)} if use_sliding_windows else {}
-
+    # todo 高版本flash_attn，有参数deterministic
     if flash_241:
         if deterministic is None:
             deterministic = deterministic_g
@@ -355,7 +356,7 @@ def _flash_attention_forward(
         )
         cu_seqlens_q, cu_seqlens_k = cu_seq_lens
         max_seqlen_in_batch_q, max_seqlen_in_batch_k = max_seq_lens
-
+        # todo 处理attention的逻辑！！！！！！
         attn_output_unpad = flash_attn_varlen_func(
             query_states,
             key_states,

@@ -43,7 +43,7 @@ from .utils.generic import is_timm_config_dict
 
 logger = logging.get_logger(__name__)
 
-
+# todo 模型配置类
 class PretrainedConfig(PushToHubMixin):
     # no-format
     r"""
@@ -300,6 +300,7 @@ class PretrainedConfig(PushToHubMixin):
         self._commit_hash = kwargs.pop("_commit_hash", None)
 
         # Attention implementation to use, if relevant.
+        # todo 获取attn的实现类
         self._attn_implementation_internal = kwargs.pop("attn_implementation", None)
         self._attn_implementation_autoset = False
 

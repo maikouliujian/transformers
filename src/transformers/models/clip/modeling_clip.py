@@ -1168,6 +1168,7 @@ class CLIPVisionModel(CLIPPreTrainedModel):
         )
 
 
+
 @add_start_docstrings(CLIP_START_DOCSTRING)
 class CLIPModel(CLIPPreTrainedModel):
     config_class = CLIPConfig

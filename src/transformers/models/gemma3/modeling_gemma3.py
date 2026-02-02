@@ -339,6 +339,12 @@ class Gemma3Attention(nn.Module):
         if attention_mask is not None:
             # backwards compatibility
             attention_mask = attention_mask.to(query_states)
+        print("==========query_states=======", query_states)
+        print("==========query_states===shape====", query_states.shape)
+        print("==========key_states=======", key_states)
+        print("==========key_states===shape====", key_states.shape)
+        print("==========value_states=======", value_states)
+        print("==========value_states====shape===", value_states.shape)
         attn_output, attn_weights = attention_interface(
             self,
             query_states,
@@ -350,8 +356,9 @@ class Gemma3Attention(nn.Module):
             sliding_window=self.sliding_window,
             **kwargs,
         )
-
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
+        print("==========attn_output=======", attn_output)
+        print("==========attn_output====shape===", attn_output.shape)
         attn_output = self.o_proj(attn_output)
         return attn_output, attn_weights
 

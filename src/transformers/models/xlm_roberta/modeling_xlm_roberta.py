@@ -320,7 +320,7 @@ class XLMRobertaSdpaSelfAttention(XLMRobertaSelfAttention):
                 past_key_value,
                 output_attentions,
             )
-
+        print("XLMRobertaSdpaSelfAttention in=================", hidden_states)
         bsz, tgt_len, _ = hidden_states.size()
 
         query_layer = self.transpose_for_scores(self.query(hidden_states))
@@ -367,7 +367,37 @@ class XLMRobertaSdpaSelfAttention(XLMRobertaSelfAttention):
         is_causal = (
             True if self.is_decoder and not is_cross_attention and attention_mask is None and tgt_len > 1 else False
         )
-
+        # print("q", query_layer)
+        # print("q s", query_layer.shape)
+        # print("k", key_layer)
+        # print("k s", key_layer.shape)
+        # print("v", value_layer)
+        # print("v s", value_layer.shape)
+        # query_layer_ = torch.transpose(query_layer, 1, 2)
+        # print("q", query_layer_)
+        # print("q s", query_layer_.shape)
+        # key_layer_ = torch.transpose(key_layer, 1, 2)
+        # print("k", key_layer_)
+        # print("k s", key_layer_.shape)
+        # value_layer_ = torch.transpose(value_layer, 1, 2)
+        # print("v", value_layer_)
+        # print("v s", value_layer_.shape)
+        # query_layer = query_layer.to(dtype=torch.bfloat16)
+        # key_layer = key_layer.to(dtype=torch.bfloat16)
+        # value_layer = value_layer.to(dtype=torch.bfloat16)
+        print("is_causal=============", is_causal)
+        # print("attn_fc======", torch.nn.functional.scaled_dot_product_attention)
+        print("dropout_p======", self.dropout_prob if self.training else 0.0)
+        print("hf========q============", query_layer)
+        print("hf=========q s============", query_layer.shape)
+        print("hf=========k==============", key_layer)
+        print("hf=========k s============", key_layer.shape)
+        print("hf=========v=========", value_layer)
+        print("hf=========v s=========", value_layer.shape)
+        print("hf=========attention_mask=========", attention_mask)
+        # query_layer = query_layer.permute(0, 2, 1, 3)
+        # key_layer = key_layer.permute(0, 2, 1, 3)
+        # value_layer = value_layer.permute(0, 2, 1, 3)
         attn_output = torch.nn.functional.scaled_dot_product_attention(
             query_layer,
             key_layer,
@@ -376,7 +406,10 @@ class XLMRobertaSdpaSelfAttention(XLMRobertaSelfAttention):
             dropout_p=self.dropout_prob if self.training else 0.0,
             is_causal=is_causal,
         )
-
+        # attn_output = attn_output.permute(0, 2, 1, 3)
+        # attn_output = attn_output.to(dtype=torch.bfloat16)
+        print("attn_output=============", attn_output)
+        print("attn_output shape=============", attn_output.shape)
         attn_output = attn_output.transpose(1, 2)
         attn_output = attn_output.reshape(bsz, tgt_len, self.all_head_size)
 
@@ -518,6 +551,7 @@ class XLMRobertaLayer(nn.Module):
     ) -> Tuple[torch.Tensor]:
         # decoder uni-directional self-attention cached key/values tuple is at positions 1,2
         self_attn_past_key_value = past_key_value[:2] if past_key_value is not None else None
+        print("hf======qkv in=======", hidden_states)
         self_attention_outputs = self.attention(
             hidden_states,
             attention_mask,
@@ -525,6 +559,7 @@ class XLMRobertaLayer(nn.Module):
             output_attentions=output_attentions,
             past_key_value=self_attn_past_key_value,
         )
+        print("hf======attn out =======", self_attention_outputs)
         attention_output = self_attention_outputs[0]
 
         # if decoder, the last output is tuple of self-attn cache
@@ -919,6 +954,7 @@ class XLMRobertaModel(XLMRobertaPreTrainedModel):
             inputs_embeds=inputs_embeds,
             past_key_values_length=past_key_values_length,
         )
+        # print("=======hf_out=====>", embedding_output)
 
         if attention_mask is None:
             attention_mask = torch.ones((batch_size, seq_length + past_key_values_length), device=device)
@@ -975,7 +1011,7 @@ class XLMRobertaModel(XLMRobertaPreTrainedModel):
         # input head_mask has shape [num_heads] or [num_hidden_layers x num_heads]
         # and head_mask is converted to shape [num_hidden_layers x batch x num_heads x seq_length x seq_length]
         head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
-
+        # print("hf===encoder1=====>", embedding_output)
         encoder_outputs = self.encoder(
             embedding_output,
             attention_mask=extended_attention_mask,
@@ -988,6 +1024,7 @@ class XLMRobertaModel(XLMRobertaPreTrainedModel):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
+        # print("hf=====encoder2===>", encoder_outputs)
         sequence_output = encoder_outputs[0]
         pooled_output = self.pooler(sequence_output) if self.pooler is not None else None
 

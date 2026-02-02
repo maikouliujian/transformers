@@ -2036,7 +2036,7 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
             torch.set_default_dtype(dtype_orig)
 
         return model
-
+    # todo 自动设置attention
     @classmethod
     def _autoset_attn_implementation(
         cls,
@@ -4134,6 +4134,7 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
 
         if device_map is not None:
             if is_deepspeed_zero3_enabled():
+                # todo
                 raise ValueError("DeepSpeed Zero-3 is not compatible with passing a `device_map`.")
             if not is_accelerate_available():
                 raise ValueError(
@@ -4777,6 +4778,7 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
 
         # For nice tqdm bars
         if checkpoint_files is not None and len(checkpoint_files) > 1:
+            # todo 加载模型权重日志！！！！！！
             checkpoint_files = logging.tqdm(checkpoint_files, desc="Loading checkpoint shards")
         # To be able to iterate, even if we don't use it if the state_dict is already provided
         elif state_dict is not None:

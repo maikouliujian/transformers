@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # Iterate over each file in the current directory
 for file in examples/modular-transformers/modular_*; do
     # Check if it's a regular file
