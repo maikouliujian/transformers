@@ -1642,6 +1642,7 @@ def is_mistral_common_available() -> Union[tuple[bool, str], bool]:
     return _mistral_common_available
 
 
+# todo
 def check_torch_load_is_safe() -> None:
     if not is_torch_greater_or_equal("2.6"):
         raise ValueError(
