@@ -427,10 +427,12 @@ class _BaseAutoModelClass:
         )
 
         if has_remote_code and trust_remote_code:
+            # todo 有auto map下的repo_id
             class_ref = config.auto_map[cls.__name__]
             if "--" in class_ref:
                 repo_id, class_ref = class_ref.split("--")
             else:
+                # todo 模型目录！！！！！！
                 repo_id = config.name_or_path
             model_class = get_class_from_dynamic_module(class_ref, repo_id, **kwargs)
             cls.register(config.__class__, model_class, exist_ok=True)
@@ -588,6 +590,7 @@ class _BaseAutoModelClass:
         """
         # todo 代码不在transformers中，由用户自定义【1、配置文件中有auto_map
         #                            2、代码调用处AutoModelForCausalLM.from_pretrained(model_path)中的AutoModelForCausalLM也必须在auto_map中】
+        # todo has_remote_code的含义是在transformers框架中没有相关代码！！！！！！
         has_remote_code = hasattr(config, "auto_map") and cls.__name__ in config.auto_map
         # todo 代码在transformers中
         has_local_code = type(config) in cls._model_mapping.keys()
@@ -615,7 +618,7 @@ class _BaseAutoModelClass:
             return model_class.from_pretrained(
                 pretrained_model_name_or_path, *model_args, config=config, **hub_kwargs, **kwargs
             )
-        # todo 本地包含
+        # todo 本地包含, transformers中自带的模型默认都会自动注册到_model_mapping中！！！！！！
         elif type(config) in cls._model_mapping.keys():
             # todo 获取模型类【全类名】
             model_class = _get_model_class(config, cls._model_mapping)

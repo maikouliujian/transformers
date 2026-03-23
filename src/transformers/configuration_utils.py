@@ -322,7 +322,7 @@ class PretrainedConfig(PushToHubMixin):
             except AttributeError as err:
                 logger.error(f"Can't set {key} with value {value} for {self}")
                 raise err
-
+    # todo 模型配置中的name or path
     @property
     def name_or_path(self) -> str:
         return getattr(self, "_name_or_path", None)
