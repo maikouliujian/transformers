@@ -79,7 +79,7 @@ def get_pairs(word):
         prev_char = char
     return pairs
 
-
+# todo 模型的tokenizer
 class Qwen2Tokenizer(PreTrainedTokenizer):
     """
     Construct a Qwen2 tokenizer. Based on byte-level Byte-Pair-Encoding.
