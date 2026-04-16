@@ -2190,8 +2190,9 @@ class PreTrainedTokenizerBase(SpecialTokensMixin, PushToHubMixin):
                     )
                     if config_tokenizer_class is None:
                         config_tokenizer_class = config_tokenizer_class_fast
-
+        # todo 从tokenizer_config中加载的
         if config_tokenizer_class is not None:
+            # todo !!!!!!
             if cls.__name__.replace("Fast", "") != config_tokenizer_class.replace("Fast", ""):
                 logger.warning(
                     "The tokenizer class you load from this checkpoint is not the same type as the class this"
